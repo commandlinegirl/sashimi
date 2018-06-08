@@ -16,15 +16,13 @@ RUN apt-get update && apt-get install -q -y \
     python-pip \
     bedtools
 
-RUN pip install python-dateutil --upgrade
-
-RUN pip install \
+RUN pip install python-dateutil --upgrade \
+ && pip install \
     numpy \
     scipy \
     pandas \
     pybedtools \
     cython
-
 
 #RUN git clone https://github.com/daler/pybedtools.git
 #RUN cd pybedtools && git pull && python setup.py develop && cd
@@ -32,7 +30,8 @@ RUN pip install \
 # Download dx-toolkit and source dx at login
 RUN curl https://wiki.dnanexus.com/images/files/dx-toolkit-v0.253.0-ubuntu-14.04-amd64.tar.gz | tar xzf - -C /usr/local/ --no-same-owner --no-same-permissions && echo "source /usr/local/dx-toolkit/environment" >> ~/.bashrc
 
-ADD lib /opt
+#ADD lib /opt
+RUN git clone https://github.com/commandlinegirl/sashimi.git && mv sashimi/lib/* /opt
 
 SHELL ["/bin/bash", "-c"]
 

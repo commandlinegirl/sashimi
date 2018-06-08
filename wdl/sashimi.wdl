@@ -3,7 +3,7 @@ task postprocess {
   File quantsf
 
   command {
-    python sashimi.py ${quantsf}
+    python /opt/sashimi.py ${quantsf}
   }
 
   output {
