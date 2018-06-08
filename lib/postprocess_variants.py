@@ -75,6 +75,6 @@ def add_call_columns(events, raw_output_fn):
                 else:
                     res.append((spl[0], spl[1], str(int(spl[1]) + 500), 0))
         print >>f, "\n".join(map(lambda x: str(x[0]) + '\t' + str(x[1]) + '\t' + str(x[2]) + '\t' + str(x[3]), res))
-    run_cmd("cut -f4 -d$'\t' tempcolumn | paste {} - | tee salmon_all_sorted_tmp.bed".format(raw_output_fn))
+    run_cmd("cut -f4 -d$'\t' tempcolumn | paste {} - > salmon_all_sorted_tmp.bed".format(raw_output_fn))
     run_cmd("mv salmon_all_sorted_tmp.bed {}".format(raw_output_fn))
 
