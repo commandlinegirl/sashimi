@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os
+import os, argparse
 
 def main(args):
     # The following line(s) initialize your data object inputs on the platform
@@ -14,19 +14,18 @@ def main(args):
     event_output_hash = {}
     for i, f in enumerate(event_outputs):
         # dxpy.download_dxfile(f.get_id(), "event_outputs-" + str(i))
-        fname = "event_outputs-" + str(i)
-        with open(fname, 'r') as event_output:
+        with open(f, 'r') as event_output:
             for event in event_output:
                 spl = event.split()
-                if not fname in event_output_hash:
-                    event_output_hash[fname] = set()
-                event_output_hash[fname].add((str(spl[0]), str(spl[1])))
+                if not f in event_output_hash:
+                    event_output_hash[f] = set()
+                event_output_hash[f].add((str(spl[0]), str(spl[1])))
 
     # Piecewise merge must happen here...
     # Use salmon_all_sorted to track what coordinate system we're on
     writer = open("merged_deletion", "w")
     # Expects chr, start, end,
-    with open("salmon_all_sorted", 'r') as f:
+    with open(salmon_all_sorted, 'r') as f:
         for line in f:
             spl = line.split()
             a = []
@@ -41,31 +40,19 @@ def main(args):
 
             writer.write(generateRow)
         writer.close()
-    # The following line(s) use the Python bindings to upload your file outputs
-    # after you have created them on the local file system.  It assumes that you
-    # have used the output field name for the filename for each output, but you
-    # can change that behavior to suit your needs.
-
-    # merged_deletion = dxpy.upload_local_file("merged_deletion")
-
-    # The following line fills in some basic dummy output and assumes
-    # that you have created variables to represent your output with
-    # the same name as your output fields.
-
-    # output = {}
-    # output["merged_deletion"] = dxpy.dxlink(merged_deletion)
-
-    # return output
 
 def get_args():
     parser = argparse.ArgumentParser(description="Stitch together deletion events from different callers")
 
-    salmon_all_sorted = args.salmon_all_sorted
-    event_outputs = args.event_outputs
+    # salmon_all_sorted = args.salmon_all_sorted
+    # event_outputs = args.event_outputs
 
     parser.add_argument('--salmon_all_sorted',
+                         type=str,
                          help='Path to the output of BED transformation of SALMON output')
     parser.add_argument('--event_outputs',
+                         nargs='*',
+                         type=str,
                          help='List of events classified; tangent to salmon_all_sorted')
     args = parser.parse_args()
     return args
