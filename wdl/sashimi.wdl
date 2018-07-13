@@ -7,7 +7,7 @@ task read_salmon_output {
   File quantsf
   File?  blacklist
   Array[String]? chromosomes
-  Boolean smooth_raw_output = false
+  Boolean? smooth_raw_output = false
   Int? smoothing_window_len
   String? smoothing_strategy
 
@@ -78,11 +78,13 @@ task merge_classifier_outputs {
 task integrate_outputs {
   File merged_events 
   Array[Int] neighbor_sizes
+  Int? merge_distance
 
   command {
     python /opt/integrate_outputs.py \
         --merged_events ${merged_events} \
-        --neighbor_sizes $(echo ${sep=' ' neighbor_sizes})
+        --neighbor_sizes $(echo ${sep=' ' neighbor_sizes}) \
+        --merge_distance ${merge_distance}
   }
 
   output {
@@ -102,7 +104,7 @@ task integrate_outputs {
 task evaluate_output {
   File sample_events
   File? truth_events
-  Float overlap = 0.5
+  Float overlap = 0.75
 
   command {
     python /opt/evaluate.py \
@@ -130,15 +132,32 @@ task evaluate_output {
 #########################################
 
 workflow sashimi {
+
+  # inputs to read_salmon_output
   File quantsf
-  File? truth_events
+  Boolean? smooth_raw_output
+  String? smoothing_strategy
+  Int? smoothing_window_len
+  Array[String]? chromosomes
+
+  # inputs to classifier scatter
   Array[Int] neighbor_sizes = [6, 10]
+
+  # inputs to evaluate
+  File? truth_events
   Boolean evaluate = false
+
+  # inputs to integrate
+  Int? merge_distance
 
   # read in data, preprocess, and normalize
   call read_salmon_output {
     input: 
-      quantsf = quantsf
+      quantsf = quantsf,
+      smooth_raw_output = smooth_raw_output,
+      smoothing_strategy = smoothing_strategy,
+      smoothing_window_len = smoothing_window_len,
+      chromosomes = chromosomes
   }
 
   # scatter (run the classifier with different parameters to call dels)
@@ -161,7 +180,8 @@ workflow sashimi {
   call integrate_outputs {
     input:
         merged_events = merge_outputs.merged_events,
-        neighbor_sizes = neighbor_sizes
+        neighbor_sizes = neighbor_sizes,
+        merge_distance = merge_distance
   }
 
  if (evaluate) {

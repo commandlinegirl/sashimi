@@ -226,17 +226,14 @@ def get_args():
     parser.add_argument('--het_range',
                          default=[0.01, 5],
                          help='Expected TPM range for heterozygous deletions')
-    parser.add_argument('--chromosomes',
-                         type=int,
-                         help='List of chromosomes to limit the analysis to')
     parser.add_argument('--merge_distance',
                          default=500,
                          type=int,
-                         help='List of chromosomes to limit the analysis to')
+                         help='Minimum distance between events to be merged')
     parser.add_argument('--scaling_factor',
-                         default=500,
+                         default=1.5,
                          type=float,
-                         help='List of chromosomes to limit the analysis to')
+                         help='Scaling factor for heterozygous deletion detection')
 
     args = parser.parse_args()
     return args
