@@ -17,15 +17,16 @@ RUN pip install python-dateutil --upgrade \
     pandas \
     pybedtools
 
+SHELL ["/bin/bash", "-c"]
+
 RUN curl https://wiki.dnanexus.com/images/files/dx-toolkit-v0.253.0-ubuntu-14.04-amd64.tar.gz | tar xzf - -C /usr/local/ --no-same-owner --no-same-permissions \
   && source /usr/local/dx-toolkit/environment
 
 ARG CACHEBUST=1
 
-RUN git clone https://github.com/commandlinegirl/sashimi.git
-RUN mv sashimi/lib/* /opt
+RUN git clone --single-branch -b simplify https://github.com/commandlinegirl/sashimi.git
+RUN mv sashimi/src/* /opt
 
 WORKDIR /opt
 
-SHELL ["/bin/bash", "-c"]
 
