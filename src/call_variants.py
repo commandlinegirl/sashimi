@@ -59,35 +59,18 @@ def tpm_mean_finder(chrom, df):
     return base_mean, base_std
 
 
-def map_region_to_detection(result_bed):
-    region2event_map = {}
-    with open(result_bed, 'r') as f:
-        next(f) # skip header
-        for line in f:
-            splat = line.split()
-            # Keyed by chrom, start
-            region2event_map[(splat[0], int(splat[1]))] = float(splat[4])
-    return region2event_map
-
-def add_call_columns(events, df_smoothed):
-    event_series = []
-    for index, row in df_smoothed.iterrows():
-        event = 0
-        if (row['Chromosome'], row['Start']) in events:
-            event = 1
-        event_series.append(event)
-    df_smoothed['Event'] = event_series
-    return df_smoothed
-
-
 def extract_deletions(df, col_name, ranges):
     r = ranges['ho'] #TODO
-    df_hom = df[(df[col_name] >= r[0]) & (df[col_name] <= r[1])]
-    df_het = df_hom.copy()
+    df_het = df.copy()
+    df_hom = df.copy()
+    df_hom['Event'] = (df_hom[col_name] >= r[0]) & (df_hom[col_name] <= r[1])
+    df_hom['Event'].astype(int)
     return df_hom, df_het
+
 
 def get_column_name(strategy, window):
     return "Smoothed_{}_{}".format(strategy, window)
+
 
 def main(args):
 
@@ -117,19 +100,9 @@ def main(args):
     ######################################################################
     ranges = get_het_ranges(args.het_range, args.hom_range, df_smoothed, args.chromosomes, args.scaling_factor)
     hom_extr, het_extr = extract_deletions(df_smoothed, col_name, ranges)
-    hom_extr.to_csv('salmon_dels_only_ho.bed', sep='\t', index=None, header=True)
-    het_extr.to_csv('salmon_dels_only_he.bed', sep='\t', index=None, header=True)
+    hom_extr.to_csv('salmon_all_events_ho.bed', sep='\t', index=None, header=True)
+    het_extr.to_csv('salmon_all_events_he.bed', sep='\t', index=None, header=True)
 
-    # add a column to "salmon_all_sorted.bed" that marks each region with the detection output:
-    # 1 - for variant detected, 0 - no variant
-
-    ho_events = map_region_to_detection('salmon_dels_only_ho.bed')
-    df_events = add_call_columns(ho_events, df_smoothed)
-    df_events.to_csv('salmon_all_events_ho.bed', sep='\t', index=False, header=True)
-
-    he_events = map_region_to_detection('salmon_dels_only_he.bed')
-    df_events = add_call_columns(he_events, df_smoothed)
-    df_events.to_csv('salmon_all_events_he.bed', sep='\t', index=False, header=True)
     logger.info('Done')
 
 def get_args():

@@ -53,16 +53,20 @@ task call_variants {
 
 task integrate_outputs {
   File salmon_all_sorted
-  Array[File] event_outputs
+  Array[File] event_outputs_ho
   Array[Int] smoothing_windows
   Int? merge_distance
+  Int? min_variant_len
+  Float? min_score
 
   command {
     python /opt/integrate_outputs.py \
         --salmon_all_sorted ${salmon_all_sorted} \
-        --event_outputs $(echo ${sep=' ' event_outputs}) \
+        --event_outputs $(echo ${sep=' ' event_outputs_ho}) \
         --smoothing_windows $(echo ${sep=' ' smoothing_windows}) \
-        --merge_distance ${merge_distance}
+        --merge_distance ${merge_distance} \
+        --min_variant_len ${min_variant_len} \
+        --min_score ${min_score}
   }
 
   output {
@@ -121,6 +125,8 @@ workflow sashimi {
   Array[Int] smoothing_windows = [3]
   # inputs to integrate
   Int? merge_distance = 500
+  Int? min_variant_len = 500
+  Float? min_score = 1.0
   # inputs to evaluate
   Boolean evaluate = false
   File? truth_events
@@ -149,9 +155,11 @@ workflow sashimi {
   call integrate_outputs {
     input:
       salmon_all_sorted = read_salmon_output.salmon_all_sorted,
-      event_outputs = call_variants.salmon_all_events_ho,
+      event_outputs_ho = call_variants.salmon_all_events_ho,
       smoothing_windows = smoothing_windows,
-      merge_distance = merge_distance
+      merge_distance = merge_distance,
+      min_variant_len = min_variant_len,
+      min_score = min_score
   }
 
   if (evaluate) {
