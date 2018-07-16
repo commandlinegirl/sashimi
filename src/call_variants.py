@@ -61,10 +61,10 @@ def tpm_mean_finder(chrom, df):
 
 def extract_deletions(df, col_name, ranges):
     r = ranges['ho'] #TODO
-    df_het = df.copy()
     df_hom = df.copy()
     df_hom['Event'] = (df_hom[col_name] >= r[0]) & (df_hom[col_name] <= r[1])
-    df_hom['Event'].astype(int)
+    df_hom['Event'] = df_hom['Event'].astype(int)
+    df_het = df_hom.copy()
     return df_hom, df_het
 
 
@@ -85,7 +85,7 @@ def main(args):
     smooth_signal = True if ((args.smoothing_window >= 3) or args.smoothing_window and args.smoothing_strategy) else False
     if not smooth_signal:
         mesg = "Skipping smoothing. To smooth the data set smoothing window"
-        mesg += " to be larger than 3 and select a smoothing strategy."
+        mesg += " to be larger than 2 and select a smoothing strategy."
         logger.info(mesg)
 
     df_smoothed = df.copy()

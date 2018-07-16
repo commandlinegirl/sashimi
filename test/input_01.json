@@ -1,4 +1,6 @@
 {
+ "sashimi.analyse_hom": true,
+
  "sashimi.quantsf" : "data/hom/hom_quant_60x_2kb-10kb_chr21.sf",
  "sashimi.chromosomes" : ["21"],
 
@@ -9,6 +11,6 @@
  "sashimi.min_variant_len": 1000,
 
  "sashimi.evaluate": true,
- "sashimi.truth_events": "data/hom/hom_truth_dels_only.bed",
- "sashimi.overlap": 0.75
+ "sashimi.evaluate_hom.truth_events": "data/hom/hom_truth_dels_only.bed",
+ "sashimi.evaluate_hom.overlap": 0.75
 } 

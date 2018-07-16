@@ -1,6 +1,6 @@
 
 #########################################
-# Preprocess salmon output
+# Preprocess quant.sf - the output of Salmon
 #########################################
 
 task read_salmon_output {
@@ -53,7 +53,8 @@ task call_variants {
 
 task integrate_outputs {
   File salmon_all_sorted
-  Array[File] event_outputs_ho
+  Array[File] call_outputs_ho
+  Array[File] call_outputs_he
   Array[Int] smoothing_windows
   Int? merge_distance
   Int? min_variant_len
@@ -62,7 +63,8 @@ task integrate_outputs {
   command {
     python /opt/integrate_outputs.py \
         --salmon_all_sorted ${salmon_all_sorted} \
-        --event_outputs $(echo ${sep=' ' event_outputs_ho}) \
+        --call_outputs_ho $(echo ${sep=' ' call_outputs_ho}) \
+        --call_outputs_he $(echo ${sep=' ' call_outputs_he}) \
         --smoothing_windows $(echo ${sep=' ' smoothing_windows}) \
         --merge_distance ${merge_distance} \
         --min_variant_len ${min_variant_len} \
@@ -70,9 +72,18 @@ task integrate_outputs {
   }
 
   output {
-    File all_classifier_outputs = "all_classifier_outputs.bed"
-    File integrated_output = "integrated_output.bed"
-    File merged_calls_ho = "merged_calls_ho.bed"
+    # Files storing the output of each caller in adjacent columns
+    File all_classifier_outputs_ho = "all_classifier_outputs_ho.bed"
+    File all_classifier_outputs_he = "all_classifier_outputs_he.bed"
+
+    # Files storing a caller output (1 or 0) for each region
+    # and a score/confidence attached to each call
+    File integrated_output_ho = "integrated_output_ho.bed"
+    File integrated_output_he = "integrated_output_he.bed"
+
+    # Final postprocessed BED with identified deletions
+    File result_dels_ho = "result_dels_ho.bed"
+    File result_dels_he = "result_dels_he.bed"
   }
 
   runtime {
@@ -87,7 +98,7 @@ task integrate_outputs {
 task evaluate_output {
   File sample_events
   File? truth_events
-  Float overlap
+  Float overlap = 0.5
 
   command {
     python /opt/evaluate.py \
@@ -116,6 +127,9 @@ task evaluate_output {
 
 workflow sashimi {
 
+  # general inputs
+  Boolean analyse_hom = true
+  Boolean analyse_het = false
   # inputs to read_salmon_output
   File quantsf
   Array[String]? chromosomes
@@ -129,8 +143,9 @@ workflow sashimi {
   Float? min_score = 1.0
   # inputs to evaluate
   Boolean evaluate = false
-  File? truth_events
-  Float overlap = 0.5
+  File? truth_events_ho
+  File? truth_events_he
+  Float? overlap
 
   Array[Pair[String, Int]] smoothing_params = zip(smoothing_strategies, smoothing_windows)
 
@@ -155,18 +170,28 @@ workflow sashimi {
   call integrate_outputs {
     input:
       salmon_all_sorted = read_salmon_output.salmon_all_sorted,
-      event_outputs_ho = call_variants.salmon_all_events_ho,
+      call_outputs_ho = call_variants.salmon_all_events_ho,
+      call_outputs_he = call_variants.salmon_all_events_he,
       smoothing_windows = smoothing_windows,
       merge_distance = merge_distance,
       min_variant_len = min_variant_len,
       min_score = min_score
   }
 
-  if (evaluate) {
-    call evaluate_output {
+  if (evaluate && analyse_hom) {
+    call evaluate_output as evaluate_hom {
       input:
-        sample_events = integrate_outputs.merged_calls_ho,
-        truth_events = truth_events,
+        sample_events = integrate_outputs.result_dels_ho,
+        truth_events = truth_events_ho,
+        overlap = overlap
+    }
+  }
+
+  if (evaluate && analyse_het) {
+    call evaluate_output as evaluate_het {
+      input:
+        sample_events = integrate_outputs.result_dels_he,
+        truth_events = truth_events_he,
         overlap = overlap
     }
   }
