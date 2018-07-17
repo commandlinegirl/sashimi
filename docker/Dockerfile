@@ -24,7 +24,7 @@ RUN curl https://wiki.dnanexus.com/images/files/dx-toolkit-v0.253.0-ubuntu-14.04
 
 ARG CACHEBUST=1
 
-RUN git clone --single-branch -b simplify https://github.com/commandlinegirl/sashimi.git
+RUN git clone https://github.com/commandlinegirl/sashimi.git
 RUN mv sashimi/src/* /opt
 
 WORKDIR /opt
