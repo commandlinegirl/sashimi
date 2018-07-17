@@ -11,6 +11,6 @@
  "sashimi.min_variant_len": 1000,
 
  "sashimi.evaluate": true,
- "sashimi.evaluate_hom.truth_events": "data/hom/hom_truth_dels_only.bed",
- "sashimi.evaluate_hom.overlap": 0.75
+ "sashimi.truth_events_ho": "data/hom/hom_truth_dels_only.bed",
+ "sashimi.overlap": 0.75
 } 
