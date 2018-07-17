@@ -1,0 +1,14 @@
+{
+    "stage-0.evaluate": true,
+    "stage-0.analyse_hom": true,
+    "stage-0.min_variant_len": 1000,
+    "stage-0.smoothing_strategies" : ["medianfilter"],
+    "stage-0.smoothing_windows" : [3],
+    "stage-0.quantsf": {
+        "$dnanexus_link": "file-FG9V9x003z5PgFXF4p08p7z4"
+    }, 
+    "stage-0.truth_events_ho": {
+        "$dnanexus_link": "file-FJ6F4yj0BFP72y6Q2vYfBY11"
+    },
+    "stage-0.overlap": 0.5
+}
