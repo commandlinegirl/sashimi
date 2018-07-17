@@ -1,3 +1,6 @@
+import numpy as np
+from scipy.signal import medfilt
+
 def smooth(x,window_len=11,window='hanning'):
     """smooth the data using a window with requested size.
     Adapted from:
@@ -39,7 +42,7 @@ def smooth(x,window_len=11,window='hanning'):
 
 
 def smooth_salmon_output(df, smooth_raw_output, window_len, smoothing_strategy):
-    '''
+    ''' 
     Input df columns: Chromosome Start End NumReads TPM
     Returns: df with appended 'Smoothed_TPM' column
     '''
@@ -47,9 +50,9 @@ def smooth_salmon_output(df, smooth_raw_output, window_len, smoothing_strategy):
     # TPM at the boundaries are all 0
     if smooth_raw_output:
         if smoothing_strategy == 'medianfilter':
-            df['Smoothed_TPM'] = signal.medfilt(df['TPM'].tolist(), window_len)
+            smoothed_series = medfilt(df['TPM'].tolist(), window_len)
         else:
-            df['Smoothed_TPM'] = smooth(df['TPM'].tolist(), window_len, smoothing_strategy)[int(window_len/2):(int(window_len/2)*-1)]
+            smoothed_series = smooth(df['TPM'].tolist(), window_len, smoothing_strategy)[int(window_len/2):(int(window_len/2)*-1)]
     else:
-        df['Smoothed_TPM'] = df['TPM']
-    return df
+        smoothed_series = df['TPM']
+    return smoothed_series

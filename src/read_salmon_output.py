@@ -48,32 +48,20 @@ def main(args):
 
     # filter out specific chromosomes for the analysis, if they were provided
     df_chr_filtered = limit_to_chromosomes(df_raw, args.chromosomes)
-
-    # append a 'Smoothed_TPM' column and save
-    df_smoothed = smoothing.smooth_salmon_output(df_chr_filtered, args.smooth_raw_output, args.smoothing_window_len, args.smoothing_strategy)
-    df_smoothed.to_csv('salmon_all_sorted.bed', sep='\t', index=False, header=False)
+    df_chr_filtered.to_csv('salmon_all_sorted.bed', sep='\t', index=False, header=True)
 
 def get_args():
     parser = argparse.ArgumentParser(description="Sashimi, a tool copy number analysis.")
     parser.add_argument('quantsf',
                          type=str,
                          help='Path to the output of salmon (quant.sf file)')
+    parser.add_argument('--chromosomes',
+                         nargs='*',
+                         type=str,
+                         help='List of chromosomes to limit the analysis to')
     parser.add_argument('--blacklist',
                          type=str,
                          help='Path to the bed file with regions that should not be included in the analysis')
-    parser.add_argument('--chromosomes',
-                         help='List of chromosomes to limit the analysis to')
-    parser.add_argument('--smooth_raw_output',
-                         action='store_true',
-                         help='Apply smothing to the data')
-    parser.add_argument('--smoothing_window_len',
-                         default=5,
-                         type=int,
-                         help='Size of the smoothing window')
-    parser.add_argument('--smoothing_strategy',
-                         default='hanning',
-                         type=str,
-                         help='What smoothing strategy should be used')
 
     args = parser.parse_args()
     return args

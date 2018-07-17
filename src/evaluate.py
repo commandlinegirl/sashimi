@@ -3,19 +3,19 @@ import subprocess
 import argparse
 
 def run_cmd(cmd, returnOutput=False):
-    print cmd
+    print(cmd)
     if returnOutput:
         try:
             output = subprocess.check_output(cmd, shell=True, executable='/bin/bash').strip()
             return output
         except subprocess.CalledProcessError as e:
-            print "error code", e.returncode, e.output
+            print("error code", e.returncode, e.output)
             return
     else:
         try:
             subprocess.check_call(cmd, shell=True, executable='/bin/bash')
         except subprocess.CalledProcessError as e:
-            print "error code", e.returncode, e.output
+            print("error code", e.returncode, e.output)
 
 
 def get_overlaps(in_a, in_b, out_fname, F_val=None, f_val=None, r=False):

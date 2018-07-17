@@ -1,18 +1,16 @@
 
 #########################################
-# Preprocess and normalize salmon output
+# Preprocess quant.sf - the output of Salmon
 #########################################
 
 task read_salmon_output {
   File quantsf
-  File?  blacklist
+  File? blacklist
   Array[String]? chromosomes
-  Boolean? smooth_raw_output = false
-  Int? smoothing_window_len
-  String? smoothing_strategy
 
   command {
-    python /opt/read_salmon_output.py ${quantsf}
+    python /opt/read_salmon_output.py ${quantsf} \
+        --chromosomes $(echo ${sep=' ' chromosomes})
   }
 
   output {
@@ -28,19 +26,20 @@ task read_salmon_output {
 # Call variants
 #########################################
 
-task classifier {
+task call_variants {
   File salmon_all_sorted
-  Int neighbor_size = 4
+  String? smoothing_strategy
+  Int? smoothing_window
 
   command {
-    python /opt/classifier.py ${salmon_all_sorted} \
-        --neighbor_size ${neighbor_size} 
+    python /opt/call_variants.py ${salmon_all_sorted} \
+        --smoothing_strategy ${smoothing_strategy} \
+        --smoothing_window ${smoothing_window}
   }
 
   output {
-    File salmon_dels_only_ho = "salmon_dels_only_ho.bed"
-    File salmon_dels_only_he = "salmon_dels_only_he.bed"
-    File salmon_all_events = "salmon_all_events.bed"
+    File salmon_all_events_ho = "salmon_all_events_ho.bed"
+    File salmon_all_events_he = "salmon_all_events_he.bed"
   }
 
   runtime {
@@ -49,47 +48,42 @@ task classifier {
 }
 
 #########################################
-# Merge call outputs from different calls
-#########################################
-
-task merge_classifier_outputs {
-  File salmon_all_sorted
-  Array[File] event_outputs
-
-  command {
-    python /opt/merge_classifier_outputs2.py \
-        --salmon_all_sorted ${salmon_all_sorted} \
-        --event_outputs $(echo ${sep=' ' event_outputs})
-  }
-
-  output {
-    File merged_events = "merged_events.bed" 
-  }
-
-  runtime {
-    docker: "commandlinegirl/sashimi"
-  }
-}
-
-#########################################
-# Integrate outputs
+# Integrate callers' outputs
 #########################################
 
 task integrate_outputs {
-  File merged_events 
-  Array[Int] neighbor_sizes
+  File salmon_all_sorted
+  Array[File] call_outputs_ho
+  Array[File] call_outputs_he
+  Array[Int] smoothing_windows
   Int? merge_distance
+  Int? min_variant_len
+  Float? min_score
 
   command {
     python /opt/integrate_outputs.py \
-        --merged_events ${merged_events} \
-        --neighbor_sizes $(echo ${sep=' ' neighbor_sizes}) \
-        --merge_distance ${merge_distance}
+        --salmon_all_sorted ${salmon_all_sorted} \
+        --call_outputs_ho $(echo ${sep=' ' call_outputs_ho}) \
+        --call_outputs_he $(echo ${sep=' ' call_outputs_he}) \
+        --smoothing_windows $(echo ${sep=' ' smoothing_windows}) \
+        --merge_distance ${merge_distance} \
+        --min_variant_len ${min_variant_len} \
+        --min_score ${min_score}
   }
 
   output {
-    File integrated_output = "integrated_output.bed"
-    File merged_calls_ho = "merged_calls_ho.bed"
+    # Files storing the output of each caller in adjacent columns
+    File all_classifier_outputs_ho = "all_classifier_outputs_ho.bed"
+    File all_classifier_outputs_he = "all_classifier_outputs_he.bed"
+
+    # Files storing a caller output (1 or 0) for each region
+    # and a score/confidence attached to each call
+    File integrated_output_ho = "integrated_output_ho.bed"
+    File integrated_output_he = "integrated_output_he.bed"
+
+    # Final postprocessed BED with identified deletions
+    File result_dels_ho = "result_dels_ho.bed"
+    File result_dels_he = "result_dels_he.bed"
   }
 
   runtime {
@@ -104,7 +98,7 @@ task integrate_outputs {
 task evaluate_output {
   File sample_events
   File? truth_events
-  Float overlap = 0.75
+  Float overlap = 0.5
 
   command {
     python /opt/evaluate.py \
@@ -133,64 +127,74 @@ task evaluate_output {
 
 workflow sashimi {
 
+  # general inputs
+  Boolean analyse_hom = true
+  Boolean analyse_het = false
   # inputs to read_salmon_output
   File quantsf
-  Boolean? smooth_raw_output
-  String? smoothing_strategy
-  Int? smoothing_window_len
   Array[String]? chromosomes
-
-  # inputs to classifier scatter
-  Array[Int] neighbor_sizes = [6, 10]
-
-  # inputs to evaluate
-  File? truth_events
-  Boolean evaluate = false
-
+  File? blacklist
+  # inputs to call_variants scatter & gather
+  Array[String] smoothing_strategies = ["medianfilter"]
+  Array[Int] smoothing_windows = [3]
   # inputs to integrate
-  Int? merge_distance
+  Int? merge_distance = 500
+  Int? min_variant_len = 500
+  Float? min_score = 1.0
+  # inputs to evaluate
+  Boolean evaluate = false
+  File? truth_events_ho
+  File? truth_events_he
+  Float? overlap
+
+  Array[Pair[String, Int]] smoothing_params = zip(smoothing_strategies, smoothing_windows)
 
   # read in data, preprocess, and normalize
   call read_salmon_output {
     input: 
       quantsf = quantsf,
-      smooth_raw_output = smooth_raw_output,
-      smoothing_strategy = smoothing_strategy,
-      smoothing_window_len = smoothing_window_len,
       chromosomes = chromosomes
   }
 
-  # scatter (run the classifier with different parameters to call dels)
-  scatter(ns in neighbor_sizes) {
-    call classifier { 
+  # scatter (run the call_variants with different parameters to call dels)
+  scatter(pair in smoothing_params) {
+    call call_variants {
       input: 
-        neighbor_size = ns,
-        salmon_all_sorted = read_salmon_output.salmon_all_sorted
+        salmon_all_sorted = read_salmon_output.salmon_all_sorted,
+        smoothing_strategy = pair.left,
+        smoothing_window = pair.right
     }
   }
 
-  # gather
-  call merge_classifier_outputs as merge_outputs {
-    input:
-      salmon_all_sorted = read_salmon_output.salmon_all_sorted,
-      event_outputs = classifier.salmon_all_events
-  }
-
-  # integrate outputs
+  # gather and integrate outputs
   call integrate_outputs {
     input:
-        merged_events = merge_outputs.merged_events,
-        neighbor_sizes = neighbor_sizes,
-        merge_distance = merge_distance
+      salmon_all_sorted = read_salmon_output.salmon_all_sorted,
+      call_outputs_ho = call_variants.salmon_all_events_ho,
+      call_outputs_he = call_variants.salmon_all_events_he,
+      smoothing_windows = smoothing_windows,
+      merge_distance = merge_distance,
+      min_variant_len = min_variant_len,
+      min_score = min_score
   }
 
- if (evaluate) {
-   call evaluate_output {
-     input:
-       sample_events = integrate_outputs.merged_calls_ho,
-       truth_events = truth_events
-   }
- }
+  if (evaluate && analyse_hom) {
+    call evaluate_output as evaluate_hom {
+      input:
+        sample_events = integrate_outputs.result_dels_ho,
+        truth_events = truth_events_ho,
+        overlap = overlap
+    }
+  }
+
+  if (evaluate && analyse_het) {
+    call evaluate_output as evaluate_het {
+      input:
+        sample_events = integrate_outputs.result_dels_he,
+        truth_events = truth_events_he,
+        overlap = overlap
+    }
+  }
 
 }
 
