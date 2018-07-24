@@ -51,9 +51,6 @@ def get_args():
                          nargs='*',
                          type=str,
                          help='List of chromosomes to limit the analysis to')
-    parser.add_argument('--blacklist',
-                         type=str,
-                         help='Path to the bed file with regions that should not be included in the analysis')
 
     # call variants
     parser.add_argument('--hom_range',
@@ -90,6 +87,10 @@ def get_args():
                          type=float,
                          default=1.0,
                          help='Min score for classification as a deletion')
+    parser.add_argument('--blacklist',
+                         nargs='*',
+                         type=str,
+                         help='Path to the bed file with regions that should not be included in the analysis')
 
     args = parser.parse_args()
     return args

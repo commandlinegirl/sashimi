@@ -59,9 +59,6 @@ def get_args():
                          nargs='*',
                          type=str,
                          help='List of chromosomes to limit the analysis to')
-    parser.add_argument('--blacklist',
-                         type=str,
-                         help='Path to the bed file with regions that should not be included in the analysis')
 
     args = parser.parse_args()
     return args
