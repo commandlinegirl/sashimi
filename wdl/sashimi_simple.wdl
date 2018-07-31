@@ -11,7 +11,7 @@ task sashimi_unified_task {
   Array[String]? chromosomes
   Array[String] smoothing_strategies = ["medianfilter"]
   Array[Int] smoothing_windows = [3]
-  Array[File]? blacklist = [""]
+  Array[File] blacklist = []
 
   command {
     python /opt/sashimi_unified.py ${quantsf} \
@@ -81,7 +81,7 @@ task evaluate_output {
 # Sashimi workflow
 #########################################
 
-workflow sashimi_simple {
+workflow sashimi_simple_v0_0_1 {
 
   # general inputs
   Boolean analyse_hom = true

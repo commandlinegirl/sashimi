@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 import pandas as pd
 import numpy as np
 import argparse
+from argparse import RawTextHelpFormatter
 import logging
 import os
 import sys 
@@ -42,7 +43,7 @@ def main(args):
     integrate_outputs.main(integr_args)
 
 def get_args():
-    parser = argparse.ArgumentParser(description="Sashimi, a tool copy number analysis.")
+    parser = argparse.ArgumentParser(description="Sashimi, a tool copy number analysis.", formatter_class=RawTextHelpFormatter)
     # 
     parser.add_argument('quantsf',
                          type=str,
@@ -67,12 +68,13 @@ def get_args():
                          nargs='*',
                          default=['medianfilter'],
                          type=str,
-                         help='What smoothing strategy should be used')
+                         choices=["medianfilter", "flat", "hanning", "hamming", "bartlett", "blackman"],
+                         help='List of smoothing strategies that should be used. List size must be equal to the list of smoothing_windows argument. Each position in the list corresponds to each position in the smoothing windows list. Available strategies are: "medianfilter", "flat", "hanning", "hamming", "bartlett", "blackman". See numpy.<strategy> for more details on each strategy')
     parser.add_argument('--smoothing_windows',
                          nargs='*',
                          default=[3],
                          type=int,
-                         help='Size of the smoothing window')
+                         help='List of the sizes of the smoothing window. Each position in the list corresponds to each position in the smoothing_strategies list. The value must be an odd integer. If the value is lower than 3 the smoothing is not applied.')
 
     # integrate outputs
     parser.add_argument('--merge_distance',
@@ -82,15 +84,15 @@ def get_args():
     parser.add_argument('--min_variant_len',
                          type=int,
                          default=1000,
-                         help='Min length of a deletion')
+                         help='Min length of a deletion that will be reported')
     parser.add_argument('--min_score',
                          type=float,
                          default=1.0,
-                         help='Min score for classification as a deletion')
+                         help='Min score (confidence level) for classification as a deletion. Must be a float between 0 and 1')
     parser.add_argument('--blacklist',
                          nargs='*',
                          type=str,
-                         help='Path to the bed file with regions that should not be included in the analysis')
+                         help='Path to the list of bed files with regions that should be excluded from the analysis')
 
     args = parser.parse_args()
     return args
