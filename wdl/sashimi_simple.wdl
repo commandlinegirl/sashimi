@@ -5,13 +5,13 @@
 
 task sashimi_unified_task {
   File quantsf
-  File? blacklist
   Int? merge_distance
   Int? min_variant_len
   Float? min_score
   Array[String]? chromosomes
   Array[String] smoothing_strategies = ["medianfilter"]
   Array[Int] smoothing_windows = [3]
+  Array[File] blacklist = []
 
   command {
     python /opt/sashimi_unified.py ${quantsf} \
@@ -20,7 +20,8 @@ task sashimi_unified_task {
         --min_score ${min_score} \
         --chromosomes $(echo ${sep=' ' chromosomes}) \
         --smoothing_strategies $(echo ${sep=' ' smoothing_strategies}) \
-        --smoothing_windows $(echo ${sep=' ' smoothing_windows})
+        --smoothing_windows $(echo ${sep=' ' smoothing_windows}) \
+        --blacklist $(echo ${sep=' ' blacklist})
   }
 
   output {
@@ -42,7 +43,7 @@ task sashimi_unified_task {
   }
 
   runtime {
-    docker: "commandlinegirl/sashimi"
+    docker: "commandlinegirl/sashimi:0.1"
   }
 }
 
@@ -72,7 +73,7 @@ task evaluate_output {
   }
 
   runtime {
-    docker: "commandlinegirl/sashimi"
+    docker: "commandlinegirl/sashimi:0.1"
   }
 }
 
@@ -80,7 +81,7 @@ task evaluate_output {
 # Sashimi workflow
 #########################################
 
-workflow sashimi_simple {
+workflow sashimi_simple_v0_0_1 {
 
   # general inputs
   Boolean analyse_hom = true
@@ -88,7 +89,7 @@ workflow sashimi_simple {
   # inputs to read_salmon_output
   File quantsf
   Array[String]? chromosomes
-  File? blacklist
+  Array[File]? blacklist
   # inputs to call_variants scatter & gather
   Array[String] smoothing_strategies = ["medianfilter"]
   Array[Int] smoothing_windows = [3]

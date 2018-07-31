@@ -5,12 +5,13 @@
  "sashimi_simple.chromosomes" : ["21"],
 
  "sashimi_simple.smoothing_strategies" : ["medianfilter"],
- "sashimi_simple.smoothing_windows" : [1],
+ "sashimi_simple.smoothing_windows" : [3],
 
  "sashimi_simple.merge_distance": 500,
  "sashimi_simple.min_variant_len": 1000,
+ "sashimi_simple.blacklist": ["data/centromeres_test.bed"],
 
  "sashimi_simple.evaluate": true,
  "sashimi_simple.truth_events_ho": "data/hom/hom_truth_dels_only.bed",
- "sashimi_simple.overlap": 0.75
+ "sashimi_simple.overlap": 0.5
 } 

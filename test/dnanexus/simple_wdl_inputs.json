@@ -3,6 +3,9 @@
     "stage-0.analyse_hom": true,
     "stage-0.min_variant_len": 1000,
     "stage-0.smoothing_strategies" : ["medianfilter"],
+    "stage-0.blacklist": [
+        "$dnanexus_link": "file-FJJ4JGj0Gg3KKPv10K680x09"
+    ],
     "stage-0.smoothing_windows" : [3],
     "stage-0.quantsf": {
         "$dnanexus_link": "file-FG9V9x003z5PgFXF4p08p7z4"

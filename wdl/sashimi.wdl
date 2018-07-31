@@ -5,7 +5,6 @@
 
 task read_salmon_output {
   File quantsf
-  File? blacklist
   Array[String]? chromosomes
 
   command {
@@ -18,7 +17,7 @@ task read_salmon_output {
   }
 
   runtime {
-    docker: "commandlinegirl/sashimi"
+    docker: "commandlinegirl/sashimi:0.1"
   }
 }
 
@@ -43,7 +42,7 @@ task call_variants {
   }
 
   runtime {
-    docker: "commandlinegirl/sashimi"
+    docker: "commandlinegirl/sashimi:0.1"
   }
 }
 
@@ -59,6 +58,7 @@ task integrate_outputs {
   Int? merge_distance
   Int? min_variant_len
   Float? min_score
+  Array[File]? blacklist = []
 
   command {
     python /opt/integrate_outputs.py \
@@ -68,7 +68,9 @@ task integrate_outputs {
         --smoothing_windows $(echo ${sep=' ' smoothing_windows}) \
         --merge_distance ${merge_distance} \
         --min_variant_len ${min_variant_len} \
-        --min_score ${min_score}
+        --min_score ${min_score} \
+        --blacklist $(echo ${sep=' ' blacklist})
+
   }
 
   output {
@@ -87,7 +89,7 @@ task integrate_outputs {
   }
 
   runtime {
-    docker: "commandlinegirl/sashimi"
+    docker: "commandlinegirl/sashimi:0.1"
   }
 }
 
@@ -117,7 +119,7 @@ task evaluate_output {
   }
 
   runtime {
-    docker: "commandlinegirl/sashimi"
+    docker: "commandlinegirl/sashimi:0.1"
   }
 }
 
@@ -133,7 +135,6 @@ workflow sashimi {
   # inputs to read_salmon_output
   File quantsf
   Array[String]? chromosomes
-  File? blacklist
   # inputs to call_variants scatter & gather
   Array[String] smoothing_strategies = ["medianfilter"]
   Array[Int] smoothing_windows = [3]
@@ -141,6 +142,7 @@ workflow sashimi {
   Int? merge_distance = 500
   Int? min_variant_len = 500
   Float? min_score = 1.0
+  Array[File]? blacklist
   # inputs to evaluate
   Boolean evaluate = false
   File? truth_events_ho

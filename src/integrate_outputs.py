@@ -60,6 +60,20 @@ def filter_by_variant_length(df, min_variant_len):
         df = df[df['Length'] >= min_variant_len]
     return df
 
+def remove_blacklisted_events(salmon_df, blacklist_files):
+    '''
+    Remove specific regions from the output
+    '''
+    salmon_output = salmon_df.copy()
+    for blacklist_fn in blacklist_files:
+        print("Filtering out regions from {}".format(blacklist_fn))
+        salmon = pybedtools.BedTool.from_dataframe(salmon_output)
+        blacklist = pybedtools.BedTool(blacklist_fn)
+        filtered_df = salmon.intersect(blacklist, v=True) \
+            .to_dataframe(names = ['Chromosome', 'Start', 'End', 'NumReads', 'TPM', 'Confidence', 'Length'], sep='\t')
+        salmon_output = filtered_df
+    return filtered_df
+
 
 def postprocess_called_events(zyg_type, call_outputs, args):
     all_calls_in_one_file = 'all_classifier_outputs_{}.bed'.format(zyg_type)
@@ -76,6 +90,9 @@ def postprocess_called_events(zyg_type, call_outputs, args):
 
     merged_df = merge_adjacent_variants(filtered_df, args.merge_distance)
     filtered_df = filter_by_variant_length(merged_df, args.min_variant_len)
+
+    if args.blacklist:
+        filtered_df = remove_blacklisted_events(filtered_df, args.blacklist)
 
     filtered_df.to_csv(merged_calls, sep='\t', index=False, header=False)
 
@@ -116,6 +133,11 @@ def get_args():
                          type=float,
                          default=1.0,
                          help='Min score for classification as a deletion')
+    parser.add_argument('--blacklist',
+                         nargs='*',
+                         type=str,
+                         help='Path to the bed file(s) with regions that should not be included in the final output')
+
     args = parser.parse_args()
     return args
 
