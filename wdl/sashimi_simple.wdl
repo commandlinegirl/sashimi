@@ -11,7 +11,7 @@ task sashimi_unified_task {
   Array[String]? chromosomes
   Array[String] smoothing_strategies = ["medianfilter"]
   Array[Int] smoothing_windows = [3]
-  Array[File] blacklist = []
+  Array[File]? blacklist = []
 
   command {
     python /opt/sashimi_unified.py ${quantsf} \
@@ -43,7 +43,7 @@ task sashimi_unified_task {
   }
 
   runtime {
-    docker: "commandlinegirl/sashimi:0.1"
+    docker: "commandlinegirl/sashimi:0.2"
   }
 }
 
@@ -73,7 +73,7 @@ task evaluate_output {
   }
 
   runtime {
-    docker: "commandlinegirl/sashimi:0.1"
+    docker: "commandlinegirl/sashimi:0.2"
   }
 }
 

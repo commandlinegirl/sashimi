@@ -13,7 +13,7 @@ import smoothing
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def get_het_ranges(het_range, hom_range, df_smoothed, chromosomes, scaling_factor):
+def get_ranges(het_range, hom_range, df_smoothed, chromosomes, scaling_factor):
     if het_range is None:
         # convert to dict
         het_range = {}
@@ -64,6 +64,8 @@ def extract_deletions(df, col_name, ranges):
     df_hom = df.copy()
     df_hom['Event'] = (df_hom[col_name] >= r[0]) & (df_hom[col_name] <= r[1])
     df_hom['Event'] = df_hom['Event'].astype(int)
+
+    # TODO: for now just copy the outputs from HOM deletion extraction
     df_het = df_hom.copy()
     return df_hom, df_het
 
@@ -98,7 +100,7 @@ def main(args):
     # - Figure out the het ranges for each chromosome and extract the deletions
     # - Extract the deletions (HOM and HET) and save them to separate files
     ######################################################################
-    ranges = get_het_ranges(args.het_range, args.hom_range, df_smoothed, args.chromosomes, args.scaling_factor)
+    ranges = get_ranges(args.het_range, args.hom_range, df_smoothed, args.chromosomes, args.scaling_factor)
     hom_extr, het_extr = extract_deletions(df_smoothed, col_name, ranges)
     hom_extr.to_csv('salmon_all_events_ho.bed', sep='\t', index=None, header=True)
     het_extr.to_csv('salmon_all_events_he.bed', sep='\t', index=None, header=True)

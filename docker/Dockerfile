@@ -24,7 +24,7 @@ RUN curl https://wiki.dnanexus.com/images/files/dx-toolkit-v0.253.0-ubuntu-14.04
 
 ARG CACHEBUST=1
 
-RUN git clone https://github.com/commandlinegirl/sashimi.git
+RUN git clone -b add_smooth_column --single-branch https://github.com/commandlinegirl/sashimi.git
 RUN mv sashimi/src/* /opt
 
 WORKDIR /opt

@@ -15,9 +15,10 @@ def add_output_columns(all_classifier_outputs, event_outputs):
     for i, fn in enumerate(event_outputs):
         df = pd.read_csv(fn, delimiter='\t', header = 0,
                          dtype = {'Chromosome': str, 'Start': np.int32, 'End': np.int32,
-                                  'NumReads': np.float32, 'TPM': np.float32,
-                                  'Event': np.int32})
+                                  'NumReads': np.float32, 'TPM': np.float32, 'Event': np.int32})
         df_all['Classifier_' + str(i)] = df['Event']
+        smoothed_column = [col for col in df if col.startswith('Smoothed']
+        df_all[smoothed_column] = df[smoothed_column]
     return df_all 
 
 
