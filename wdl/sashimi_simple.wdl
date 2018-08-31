@@ -43,7 +43,7 @@ task sashimi_unified_task {
   }
 
   runtime {
-    docker: "commandlinegirl/sashimi:0.1"
+    docker: "commandlinegirl/sashimi:hom_range_test"
   }
 }
 
@@ -73,7 +73,7 @@ task evaluate_output {
   }
 
   runtime {
-    docker: "commandlinegirl/sashimi:0.1"
+    docker: "commandlinegirl/sashimi:hom_range_test"
   }
 }
 
@@ -81,7 +81,7 @@ task evaluate_output {
 # Sashimi workflow
 #########################################
 
-workflow sashimi_simple_v0_0_1 {
+workflow sashimi_simple_vhom_range_test {
 
   # general inputs
   Boolean analyse_hom = true

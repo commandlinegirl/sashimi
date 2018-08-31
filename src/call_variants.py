@@ -113,7 +113,7 @@ def get_args():
     parser.add_argument('--chromosomes',
                          help='List of chromosomes to limit the analysis to')
     parser.add_argument('--hom_range',
-                         default=[0, 0.01],
+                         default=[0, 0.001],
                          help='Expected range for homozygous deletions')
     parser.add_argument('--het_range',
                          default=[0.01, 5],
