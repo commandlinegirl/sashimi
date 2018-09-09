@@ -1,4 +1,4 @@
-task sashimi_app {
+task sashimi {
 
   # inputs for preprocessing
   File quantsf
