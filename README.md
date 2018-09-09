@@ -28,7 +28,7 @@ pip install \
 ### In a docker container
 
 ```
-docker run commandlinegirl/sashimi:0.3 /opt/sashimi.py -h
+docker run commandlinegirl/sashimi /opt/sashimi.py -h
 ```
 
 ### Using the sashimi script directly
@@ -36,3 +36,24 @@ docker run commandlinegirl/sashimi:0.3 /opt/sashimi.py -h
 ```
 python sashimi.py -h
 ```
+
+### Examples
+
+...
+
+### Acknowledgements
+
+...
+
+### Links
+
+* DockerHub
+* DNAnexus
+* 
+
+(
+todo:
+- add latest tag to the image
+- remove this
+)
+
