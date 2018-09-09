@@ -36,10 +36,11 @@ task sashimi {
     File marked_regions_del_he = "marked_regions_del_he.bed"
     File marked_regions_dup = "marked_regions_dup.bed"
 
-    # Final postprocessed BED with identified deletions
-    File merged_events_del_ho = "merged_events_del_ho.bed"
-    File merged_events_del_he = "merged_events_del_he.bed"
-    File merged_events_dup = "merged_events_dup.bed"
+    # Final postprocessed BED with identified deletions and
+    # duplications (merged)
+    File merged_events_del_ho = "del_ho.bed"
+    File merged_events_del_he = "del_he.bed"
+    File merged_events_dup = "dup.bed"
   }
 
   runtime {
