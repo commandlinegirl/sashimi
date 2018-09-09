@@ -26,4 +26,4 @@ RUN mv sashimi/src/* /opt
 
 WORKDIR /opt
 
-
+ENTRYPOINT ["python"]

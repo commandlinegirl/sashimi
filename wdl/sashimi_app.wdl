@@ -38,9 +38,9 @@ task sashimi {
 
     # Final postprocessed BED with identified deletions and
     # duplications (merged)
-    File merged_del_ho = "del_ho.bed"
-    File merged_del_he = "del_he.bed"
-    File merged_dup = "dup.bed"
+    File merged_del_ho = "merged_del_ho.bed"
+    File merged_del_he = "merged_del_he.bed"
+    File merged_dup = "merged_dup.bed"
   }
 
   runtime {

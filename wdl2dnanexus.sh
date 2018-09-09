@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-dx compile wdl/sashimi_app.wdl
+dx compile wdl/sashimi_app.wdl -f
