@@ -76,8 +76,8 @@ def main(args):
     ######################################################################
     
     hom_calls, het_calls = call_variants.extract_deletions(df_smoothed, args.del_het_tpm_range, args.del_hom_tpm_range, col_name)
-    hom_calls.to_csv('all_events_del_ho.bed', sep='\t', index=None, header=True)
-    het_calls.to_csv('all_events_del_he.bed', sep='\t', index=None, header=True)
+    hom_calls.to_csv('marked_regions_del_ho.bed', sep='\t', index=None, header=True)
+    het_calls.to_csv('marked_regions_del_he.bed', sep='\t', index=None, header=True)
 
     ######################################################################
     # Postprocess data

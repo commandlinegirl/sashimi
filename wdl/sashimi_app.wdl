@@ -1,19 +1,19 @@
-task sashimi_0.0.3 {
+task sashimi_app {
 
   # inputs for preprocessing
   File quantsf
   Array[String]? chromosomes
   Array[File]? blacklist
   # inputs to call_variants
-  Array[String] smoothing_strategy = "medianfilter"
-  Array[Int] smoothing_window = 3
+  String smoothing_strategy = "medianfilter"
+  Int smoothing_window = 3
   # inputs for postprocessing
   Int? merge_distance = 0
   Int? min_variant_len = 500
 
   command {
     python /opt/sashimi.py ${quantsf} \
-        --chromosomes $${sep=' ' chromosomes}) \
+        --chromosomes $(echo ${sep=' ' chromosomes}) \
         --blacklist $(echo ${sep=' ' blacklist}) \
         --smoothing_strategy ${smoothing_strategy} \
         --smoothing_window ${smoothing_window} \
@@ -35,7 +35,7 @@ task sashimi_0.0.3 {
   }
 
   runtime {
-    docker: "commandlinegirl/sashimi:0.0.3"
+    docker: "commandlinegirl/sashimi:0.3"
   }
 }
 

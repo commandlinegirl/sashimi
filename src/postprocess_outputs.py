@@ -47,9 +47,14 @@ def remove_blacklisted_events(salmon_df, blacklist_files):
 
 
 def postprocess(zyg_type, call_outputs, merge_distance, min_variant_len, blacklist):
-    result_file = "all_events_{}_{}.bed".format("del", zyg_type)
-    result_df = pd.read_csv(result_file, delimiter='\t', header=0)
-
+    result_file = "marked_regions_{}_{}.bed".format("del", zyg_type)
+    logger.info("Postprocessing: %s", result_file)
+    result_df = pd.read_csv(result_file, delimiter='\t', header=0,
+                            dtype = {'Chromosome': str, 'Start': np.int32, 'End': np.int32,
+                                     'NumReads': np.float32, 'TPM': np.float32,
+                                     'Smoothed_TPM': np.float32, 'Event': np.int32},
+                            names = ['Chromosome', 'Start', 'End', 'NumReads', 'TPM',
+                                     'Smoothed_TPM', 'Event'])
     result_df = filter_calls(result_df)
 
     result_df['Length'] = result_df['End'] - result_df['Start']

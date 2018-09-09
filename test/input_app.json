@@ -1,0 +1,11 @@
+{
+ "sashimi_app.quantsf" : "data/hom/hom_quant_60x_2kb-10kb_chr21.sf",
+ "sashimi_app.chromosomes" : ["21"],
+
+ "sashimi_app.smoothing_strategy" : "medianfilter",
+ "sashimi_app.smoothing_window" : 3,
+
+ "sashimi_app.merge_distance": 500,
+ "sashimi_app.min_variant_len": 500,
+ "sashimi_app.blacklist": ["data/centromeres_test.bed"]
+} 
