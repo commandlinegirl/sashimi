@@ -75,15 +75,18 @@ def main(args):
     # - Extract the deletions (HOM and HET) and save them to separate files
     ######################################################################
     
-    hom_calls, het_calls = call_variants.extract_deletions(df_smoothed, args.del_het_tpm_range, args.del_hom_tpm_range, col_name)
-    hom_calls.to_csv('marked_regions_del_ho.bed', sep='\t', index=None, header=True)
-    het_calls.to_csv('marked_regions_del_he.bed', sep='\t', index=None, header=True)
+    del_hom_calls, del_het_calls, dup_calls = \
+        call_variants.extract_deletions(df_smoothed, args.del_het_tpm_range, args.del_hom_tpm_range, args.dup_tpm_range, col_name)
+    del_hom_calls.to_csv('marked_regions_del_ho.bed', sep='\t', index=None, header=True)
+    del_het_calls.to_csv('marked_regions_del_he.bed', sep='\t', index=None, header=True)
+    dup_calls.to_csv('marked_regions_dup.bed', sep='\t', index=None, header=True)
 
     ######################################################################
     # Postprocess data
     ######################################################################
-    postprocess_outputs.postprocess('ho', hom_calls, args.merge_distance, args.min_variant_len, args.blacklist)
-    postprocess_outputs.postprocess('he', het_calls, args.merge_distance, args.min_variant_len, args.blacklist)
+    postprocess_outputs.postprocess('del_ho', del_hom_calls, args.merge_distance, args.min_variant_len, args.blacklist)
+    postprocess_outputs.postprocess('del_he', del_het_calls, args.merge_distance, args.min_variant_len, args.blacklist)
+    postprocess_outputs.postprocess('dup', dup_calls, args.merge_distance, args.min_variant_len, args.blacklist)
 
 
 def get_args():
@@ -100,9 +103,17 @@ def get_args():
     # parameters for calling variants
     parser.add_argument('--del_hom_tpm_range',
                          default=[0, 0.01],
+                         type=float,
+                         nargs='*',
                          help='Expected TPM range for homozygous deletions')
     parser.add_argument('--del_het_tpm_range',
+                         nargs='*',
+                         type=float,
                          help='Expected TPM range for heterozygous deletions')
+    parser.add_argument('--dup_tpm_range',
+                         nargs='*',
+                         type=float,
+                         help='Expected TPM range for duplications')
     parser.add_argument('--smoothing_strategy',
                          default='medianfilter',
                          type=str,

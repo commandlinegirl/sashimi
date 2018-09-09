@@ -46,8 +46,8 @@ def remove_blacklisted_events(salmon_df, blacklist_files):
     return filtered_df
 
 
-def postprocess(zyg_type, call_outputs, merge_distance, min_variant_len, blacklist):
-    result_file = "marked_regions_{}_{}.bed".format("del", zyg_type)
+def postprocess(cnv_type, call_outputs, merge_distance, min_variant_len, blacklist):
+    result_file = "marked_regions_{}.bed".format(cnv_type)
     logger.info("Postprocessing: %s", result_file)
     result_df = pd.read_csv(result_file, delimiter='\t', header=0,
                             dtype = {'Chromosome': str, 'Start': np.int32, 'End': np.int32,
@@ -59,16 +59,16 @@ def postprocess(zyg_type, call_outputs, merge_distance, min_variant_len, blackli
 
     result_df['Length'] = result_df['End'] - result_df['Start']
     if merge_distance > -1:
-        logger.info("About to merge %s variants with max distance %s", zyg_type, merge_distance)
+        logger.info("About to merge %s variants with max distance %s", cnv_type, merge_distance)
         result_df = merge_adjacent_variants(result_df, merge_distance)
 
     if min_variant_len:
-        logger.info("About to remove %s variants shorter than %s", zyg_type, min_variant_len)
+        logger.info("About to remove %s variants shorter than %s", cnv_type, min_variant_len)
         result_df = filter_by_variant_length(result_df, min_variant_len)
 
     if blacklist:
         result_df = remove_blacklisted_events(result_df, blacklist)
 
-    merged_calls = "merged_events_{}_{}.bed".format("del", zyg_type)
+    merged_calls = "merged_events_{}.bed".format(cnv_type)
     result_df.to_csv(merged_calls, sep='\t', index=False, header=True)
 
