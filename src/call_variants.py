@@ -8,12 +8,11 @@ import os
 import sys 
 import logging
 
-import smoothing
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def get_het_ranges(het_range, hom_range, df_smoothed, chromosomes, scaling_factor):
+def get_het_tpm_ranges(het_range, hom_range, df_smoothed, chromosomes):
+    #TODO: remove this maybe
     if het_range is None:
         # convert to dict
         het_range = {}
@@ -27,6 +26,7 @@ def get_het_ranges(het_range, hom_range, df_smoothed, chromosomes, scaling_facto
             het_mean = base_mean / 2.0
             print("{}: base mean TPM: {}, base stddev: {}, het TPM {}".format(chrom, base_mean, base_std, het_mean))
             # TODO: is it the right way to go?
+            scaling_factor = 1.5
             het_range_boundary = base_std / scaling_factor
             het_range[str(chrom)] = [max(het_mean - het_range_boundary, 0), het_mean + het_range_boundary]
     else:
@@ -42,99 +42,40 @@ def get_het_ranges(het_range, hom_range, df_smoothed, chromosomes, scaling_facto
     return ranges
 
 
-def within_range(val, range):
-    # range refers to a list of two elements [start, end]
-    # returns true if val is within range, inclusively
-    return val >= range[0] and val <= range[1]
-
-
-def tpm_mean_finder(chrom, df):
-    ch = df[df['Chromosome'] == chrom]
-    ch_non_zero = ch[ch['Smoothed_TPM'] > 0]
+def tpm_mean_finder(df, col_name):
+    ch_non_zero = df[df[col_name] > 0]
     if ch_non_zero.empty:
         return 0.0, 0.0
-    ch_non_zero_vals = ch_non_zero['Smoothed_TPM']
+    ch_non_zero_vals = ch_non_zero[col_name]
     base_mean = ch_non_zero_vals.mean() # baseline TPM
     base_std = ch_non_zero_vals.std()
     return base_mean, base_std
 
 
-def extract_deletions(df, col_name, ranges):
-    r = ranges['ho'] #TODO
+def get_het_tpm_range(df, col_name):
+    base_mean, base_std = tpm_mean_finder(df, col_name) 
+    logger.info("Mean TPM %s, stddev %s", base_mean, base_std)
+    range_boundary = base_mean * 0.1
+    het_tpm_range = [max(base_mean - range_boundary, 0), base_mean + range_boundary]
+    return het_tpm_range
+
+
+def extract_deletions(df, del_het_range, del_hom_range, col_name):
+    if not del_het_range:
+        del_het_range = get_het_tpm_range(df, col_name)
+    if not del_hom_range:
+        del_hom_range = [0, 0.01]
+
+    logger.info("Using range %s for homozygous deletion detection", del_hom_range)
     df_hom = df.copy()
-    df_hom['Event'] = (df_hom[col_name] >= r[0]) & (df_hom[col_name] <= r[1])
+    df_hom['Event'] = (df_hom[col_name] >= del_hom_range[0]) & (df_hom[col_name] <= del_hom_range[1])
     df_hom['Event'] = df_hom['Event'].astype(int)
-    df_het = df_hom.copy()
+
+    logger.info("Using range %s for heterozygous deletion detection", del_het_range)
+    df_het = df.copy()
+    df_het['Event'] = (df_het[col_name] >= del_het_range[0]) & (df_het[col_name] <= del_het_range[1])
+    df_het['Event'] = df_het['Event'].astype(int)
+
     return df_hom, df_het
 
-
-def get_column_name(strategy, window):
-    return "Smoothed_{}_{}".format(strategy, window)
-
-
-def main(args):
-
-    ######################################################################
-    # Smooth input data
-    ######################################################################
-    df = pd.read_csv(args.salmon_all_sorted, delimiter='\t', header = 0,
-                     dtype = {'Chromosome': str, 'Start': np.int32, 'End': np.int32,
-                              'NumReads': np.float32, 'TPM': np.float32},
-                     names = ['Chromosome', 'Start', 'End', 'NumReads', 'TPM'])
-
-    smooth_signal = True if ((args.smoothing_window >= 3) or args.smoothing_window and args.smoothing_strategy) else False
-    if not smooth_signal:
-        mesg = "Skipping smoothing. To smooth the data set smoothing window"
-        mesg += " to be larger than 2 and select a smoothing strategy."
-        logger.info(mesg)
-
-    df_smoothed = df.copy()
-    col_name = get_column_name(args.smoothing_strategy, args.smoothing_window)
-    df_smoothed[col_name] = smoothing.smooth_salmon_output(df, smooth_signal, args.smoothing_window, args.smoothing_strategy)
-    df_smoothed.to_csv('salmon_all_smoothed.bed', sep='\t', index=False, header=True)
-
-    ######################################################################
-    # Variant detection
-    # - Figure out the het ranges for each chromosome and extract the deletions
-    # - Extract the deletions (HOM and HET) and save them to separate files
-    ######################################################################
-    ranges = get_het_ranges(args.het_range, args.hom_range, df_smoothed, args.chromosomes, args.scaling_factor)
-    hom_extr, het_extr = extract_deletions(df_smoothed, col_name, ranges)
-    hom_extr.to_csv('salmon_all_events_ho.bed', sep='\t', index=None, header=True)
-    het_extr.to_csv('salmon_all_events_he.bed', sep='\t', index=None, header=True)
-
-    logger.info('Done')
-
-def get_args():
-    parser = argparse.ArgumentParser(description="Sashimi, a tool copy number analysis.")
-    parser.add_argument('salmon_all_sorted',
-                         type=str,
-                         help='Path to the sorted output of salmon in BED format')
-    parser.add_argument('--chromosomes',
-                         help='List of chromosomes to limit the analysis to')
-    parser.add_argument('--hom_range',
-                         default=[0, 0.01],
-                         help='Expected range for homozygous deletions')
-    parser.add_argument('--het_range',
-                         default=[0.01, 5],
-                         help='Expected TPM range for heterozygous deletions')
-    parser.add_argument('--scaling_factor',
-                         default=1.5,
-                         type=float,
-                         help='Scaling factor for heterozygous deletion detection')
-    parser.add_argument('--smoothing_strategy',
-                         default='hanning',
-                         type=str,
-                         help='What smoothing strategy should be used')
-    parser.add_argument('--smoothing_window',
-                         default=5,
-                         type=int,
-                         help='Size of the smoothing window')
-
-    args = parser.parse_args()
-    return args
-
-if __name__ == "__main__":
-    args = get_args()
-    main(args)
 

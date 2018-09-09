@@ -44,7 +44,7 @@ def smooth(x,window_len=11,window='hanning'):
 def smooth_salmon_output(df, smooth_raw_output, window_len, smoothing_strategy):
     ''' 
     Input df columns: Chromosome Start End NumReads TPM
-    Returns: df with appended 'Smoothed_TPM' column
+    Returns: a smoothed pandas Series 
     '''
     #TODO: do not smooth over chromosome boundaries, for now it's OK, since
     # TPM at the boundaries are all 0

@@ -1,7 +1,7 @@
 import sys
 import csv
 
-def convert_quantsf_to_bed(in_fname, out_fname, append_chr=False):
+def quantsf2bed(in_fname, out_fname, append_chr=False):
     in_file = open(in_fname, 'r')
     out_file = open(out_fname, 'w')
     header = '{}\t{}\t{}\t{}\t{}\n'.format('Chromosome', 'Start', 'End','NumReads', 'TPM')
