@@ -69,6 +69,6 @@ def postprocess(cnv_type, call_outputs, merge_distance, min_variant_len, blackli
     if blacklist:
         result_df = remove_blacklisted_events(result_df, blacklist)
 
-    merged_calls = "{}.bed".format(cnv_type)
+    merged_calls = "merged_{}.bed".format(cnv_type)
     result_df.to_csv(merged_calls, sep='\t', index=False, header=True)
 
